@@ -1,11 +1,22 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define MAX_LINE_LEN 1024
 
 void replace_text(const char *filename, const char *old_text, const char *new_text) {
     FILE *file = fopen(filename, "r");
+    if (!file) {
+        perror("Error opening file");
+        return;
+    }
+
     FILE *temp = fopen("temp.txt", "w");
+    if (!temp) {
+        perror("Error creating temporary file");
+        fclose(file);
+        return;
+    }
 
     char line[MAX_LINE_LEN];
     while (fgets(line, sizeof(line), file)) {
@@ -22,13 +33,24 @@ void replace_text(const char *filename, const char *old_text, const char *new_te
     fclose(file);
     fclose(temp);
 
-    remove(filename);
-    rename("temp.txt", filename);
+    if (remove(filename) == 0) {
+        rename("temp.txt", filename);
+    }
 }
 
 void delete_lines(const char *filename, const char *pattern) {
     FILE *file = fopen(filename, "r");
+    if (!file) {
+        perror("Error opening file");
+        return;
+    }
+
     FILE *temp = fopen("temp.txt", "w");
+    if (!temp) {
+        perror("Error creating temporary file");
+        fclose(file);
+        return;
+    }
 
     char line[MAX_LINE_LEN];
     while (fgets(line, sizeof(line), file)) {
@@ -40,13 +62,24 @@ void delete_lines(const char *filename, const char *pattern) {
     fclose(file);
     fclose(temp);
 
-    remove(filename);
-    rename("temp.txt", filename);
+    if (remove(filename) == 0) {
+        rename("temp.txt", filename);
+    }
 }
 
 void insert_text(const char *filename, const char *text, int at_start) {
     FILE *file = fopen(filename, "r");
+    if (!file) {
+        perror("Error opening file");
+        return;
+    }
+
     FILE *temp = fopen("temp.txt", "w");
+    if (!temp) {
+        perror("Error creating temporary file");
+        fclose(file);
+        return;
+    }
 
     char line[MAX_LINE_LEN];
     while (fgets(line, sizeof(line), file)) {
@@ -61,8 +94,9 @@ void insert_text(const char *filename, const char *text, int at_start) {
     fclose(file);
     fclose(temp);
 
-    remove(filename);
-    rename("temp.txt", filename);
+    if (remove(filename) == 0) {
+        rename("temp.txt", filename);
+    }
 }
 
 void show_help() {
@@ -74,19 +108,30 @@ void show_help() {
 }
 
 int main(int argc, char *argv[]) {
+    if (argc < 4) {
+        show_help();
+        return 1;
+    }
+
     const char *filename = argv[1];
     const char *command = argv[2];
 
-    if (strcmp(command, "-r") == 0) {
+    if (strcmp(command, "-r") == 0 && argc == 5) {
         replace_text(filename, argv[3], argv[4]);
-    } else if (strcmp(command, "-d") == 0) {
+    } else if (strcmp(command, "-d") == 0 && argc == 4) {
         delete_lines(filename, argv[3]);
-    } else if (strcmp(command, "-i") == 0) {
+    } else if (strcmp(command, "-i") == 0 && argc == 5) {
         if (strcmp(argv[3], "-f") == 0) {
             insert_text(filename, argv[4], 1);
         } else if (strcmp(argv[3], "-b") == 0) {
             insert_text(filename, argv[4], 0);
+        } else {
+            show_help();
+            return 1;
         }
+    } else {
+        show_help();
+        return 1;
     }
 
     return 0;
